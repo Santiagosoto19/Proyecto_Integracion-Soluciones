@@ -1,0 +1,171 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Arquitectura de interoperabilidad — Bienestar Universitario",
+    "output": "arquitectura-bienestar.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "origenes",
+        "label": "Sistemas de origen",
+        "focus": ["academico", "virtual", "financiero", "canal-hechos"],
+        "note": "Los núcleos existentes publican hechos; no se llaman entre sí ni a Bienestar."
+      },
+      {
+        "id": "correlacion",
+        "label": "Correlación",
+        "focus": ["canal-hechos", "detector", "canal-alertas"],
+        "note": "El Detector valida, correlaciona en memoria y publica solo si la regla se cumple."
+      },
+      {
+        "id": "alerta",
+        "label": "Alerta a Bienestar",
+        "focus": ["detector", "canal-alertas", "bienestar"],
+        "note": "Bienestar se suscribe a alertas, no a los silos crudos."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "academico",
+      "type": "backend",
+      "label": "Sistema Académico",
+      "tag": "promedio y cancelación",
+      "pos": [72, 40],
+      "size": [168, 70]
+    },
+    {
+      "id": "virtual",
+      "type": "backend",
+      "label": "Plataforma Virtual",
+      "tag": "inactividad",
+      "pos": [72, 248],
+      "size": [168, 70]
+    },
+    {
+      "id": "financiero",
+      "type": "backend",
+      "label": "Sistema Financiero",
+      "tag": "mora y pago",
+      "pos": [72, 456],
+      "size": [168, 70]
+    },
+    {
+      "id": "canal-hechos",
+      "type": "messagebus",
+      "label": "Canal de hechos",
+      "sublabel": "MQTT",
+      "tag": "*/eventos",
+      "pos": [320, 250],
+      "size": [168, 66]
+    },
+    {
+      "id": "detector",
+      "type": "backend",
+      "label": "Detector de riesgo",
+      "tag": "2 señales o 1 crítica",
+      "pos": [560, 242],
+      "size": [180, 74]
+    },
+    {
+      "id": "canal-alertas",
+      "type": "messagebus",
+      "label": "Canal de alertas",
+      "sublabel": "MQTT",
+      "tag": "detector/alertas",
+      "pos": [820, 250],
+      "size": [168, 66]
+    },
+    {
+      "id": "bienestar",
+      "type": "frontend",
+      "label": "Bienestar Institucional",
+      "tag": "abre el caso",
+      "pos": [1068, 246],
+      "size": [180, 70]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Núcleos existentes — no se reemplazan",
+      "wraps": ["academico", "virtual", "financiero"]
+    },
+    {
+      "kind": "region",
+      "label": "Capa de integración",
+      "wraps": ["canal-hechos", "detector", "canal-alertas"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "acad-hechos",
+      "from": "academico",
+      "to": "canal-hechos",
+      "label": "hechos académicos"
+    },
+    {
+      "id": "virt-hechos",
+      "from": "virtual",
+      "to": "canal-hechos",
+      "label": "hechos de aula",
+      "variant": "emphasis",
+      "labelAt": [400, 332]
+    },
+    {
+      "id": "fin-hechos",
+      "from": "financiero",
+      "to": "canal-hechos",
+      "label": "hechos financieros"
+    },
+    {
+      "id": "hechos-detector",
+      "from": "canal-hechos",
+      "to": "detector",
+      "label": "subscribe",
+      "labelDy": 28
+    },
+    {
+      "id": "detector-alertas",
+      "from": "detector",
+      "to": "canal-alertas",
+      "label": "publica alerta",
+      "variant": "emphasis",
+      "labelDy": 28
+    },
+    {
+      "id": "alertas-bienestar",
+      "from": "canal-alertas",
+      "to": "bienestar",
+      "label": "alerta",
+      "labelDy": 28
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Orígenes",
+      "items": [
+        "Académico, Virtual y Financiero publican cuando ocurre el hecho",
+        "No se conocen entre sí y no invocan a Bienestar"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Correlación",
+      "items": [
+        "El Detector valida JSON y correlaciona por codigo_estudiante",
+        "Alerta si hay dos señales o una crítica; un hecho aislado no abre caso"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Destino",
+      "items": [
+        "Bienestar solo recibe EstudianteRequiereRevision, AlertaActualizada o AlertaCerrada",
+        "Si Bienestar se detiene, los productores siguen emitiendo"
+      ]
+    }
+  ]
+}
